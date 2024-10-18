@@ -39,6 +39,11 @@ mongoose
 // Passport configuration (for authentication)
 require('./config/passport')(app);
 
+// Add a route for the root URL
+app.get('/', (req, res) => {
+  res.send('Welcome to Mern Ecommerce API');
+});
+
 // Application routes
 app.use(routes);
 

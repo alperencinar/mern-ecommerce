@@ -1,3 +1,4 @@
+require('dotenv').config();
 const passport = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
@@ -8,14 +9,18 @@ const mongoose = require('mongoose');
 const keys = require('./keys');
 const { EMAIL_PROVIDER } = require('../constants');
 
-const { google, facebook } = keys;
+const { google, facebook, jwt } = keys;
 
 const User = mongoose.model('User');
-const secret = keys.jwt.secret;
 
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = secret;
+opts.secretOrKey = jwt.secret;
+
+if (!opts.secretOrKey) {
+  console.error('JWT secret is missing! Please add a JWT_SECRET to the environment variables.');
+  process.exit(1); // Stop the server if there's no JWT secret
+}
 
 passport.use(
   new JwtStrategy(opts, (payload, done) => {
@@ -24,7 +29,6 @@ passport.use(
         if (user) {
           return done(null, user);
         }
-
         return done(null, false);
       })
       .catch(err => {
@@ -83,7 +87,7 @@ const googleAuth = async () => {
       )
     );
   } catch (error) {
-    console.log('Missing google keys');
+    console.log('Missing Google keys');
   }
 };
 
@@ -135,6 +139,6 @@ const facebookAuth = async () => {
       )
     );
   } catch (error) {
-    console.log('Missing facebook keys');
+    console.log('Missing Facebook keys');
   }
 };
