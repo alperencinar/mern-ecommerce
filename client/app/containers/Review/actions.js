@@ -45,13 +45,15 @@ export const fetchReviews = (n, v) => {
         }
       });
 
-      const { reviews, totalPages, currentPage, count } = response.data;
+      const { reviews = [], totalPages = 1, currentPage = 1, count = 0 } = response.data || {};
 
-      dispatch({ type: FETCH_REVIEWS, payload: reviews });
-      dispatch({
-        type: SET_ADVANCED_FILTERS,
-        payload: { totalPages, currentPage, count }
-      });
+      if (Array.isArray(reviews)) {
+        dispatch({ type: FETCH_REVIEWS, payload: reviews });
+        dispatch({
+          type: SET_ADVANCED_FILTERS,
+          payload: { totalPages, currentPage, count }
+        });
+      }
     } catch (error) {
       handleError(error, dispatch);
     } finally {
@@ -96,7 +98,7 @@ export const deleteReview = id => {
         autoDismiss: 1
       };
 
-      if (response.data.success == true) {
+      if (response.data.success === true) {
         dispatch(success(successfulOptions));
         dispatch({
           type: REMOVE_REVIEW,
@@ -115,13 +117,13 @@ export const fetchProductReviews = slug => {
     try {
       const response = await axios.get(`${API_URL}/review/${slug}`);
 
-      const { ratingSummary, totalRatings, totalReviews, totalSummary } =
-        getProductReviewsSummary(response.data.reviews);
+      const { reviews = [] } = response.data || {};
+      const { ratingSummary, totalRatings, totalReviews, totalSummary } = getProductReviewsSummary(reviews);
 
       dispatch({
         type: FETCH_PRODUCT_REVIEWS,
         payload: {
-          reviews: response.data.reviews,
+          reviews,
           reviewsSummary: {
             ratingSummary,
             totalRatings,
@@ -146,8 +148,13 @@ export const addProductReview = () => {
         isRecommended: 'required'
       };
 
-      const review = getState().review.reviewFormData;
-      const product = getState().product.storeProduct;
+      const review = getState().review.reviewFormData || {
+        title: '',
+        review: '',
+        rating: 0,
+        isRecommended: { value: false }
+      };
+      const product = getState().product.storeProduct || {};
 
       const newReview = {
         product: product._id,
@@ -185,11 +192,6 @@ export const addProductReview = () => {
       if (response.data.success === true) {
         dispatch(success(successfulOptions));
         dispatch(fetchProductReviews(product.slug));
-
-        // dispatch({
-        //   type: ADD_REVIEW,
-        //   payload: response.data.review
-        // });
         dispatch({ type: RESET_REVIEW });
       }
     } catch (error) {
@@ -204,8 +206,8 @@ export const getProductReviewsSummary = reviews => {
   let totalReviews = 0;
   let totalSummary = 0;
 
-  if (reviews.length > 0) {
-    reviews.map((item, i) => {
+  if (Array.isArray(reviews) && reviews.length > 0) {
+    reviews.forEach((item) => {
       totalRatings += item.rating;
       totalReviews += 1;
 
@@ -217,25 +219,20 @@ export const getProductReviewsSummary = reviews => {
         case 4:
           ratingSummary[1][4] += 1;
           totalSummary += 1;
-
           break;
         case 3:
           ratingSummary[2][3] += 1;
           totalSummary += 1;
-
           break;
         case 2:
           ratingSummary[3][2] += 1;
           totalSummary += 1;
-
           break;
         case 1:
           ratingSummary[4][1] += 1;
           totalSummary += 1;
-
           break;
         default:
-          0;
           break;
       }
     });

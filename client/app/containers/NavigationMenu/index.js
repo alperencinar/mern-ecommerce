@@ -17,7 +17,7 @@ import { CloseIcon } from '../../components/Common/Icon';
 
 class NavigationMenu extends React.PureComponent {
   render() {
-    const { isMenuOpen, categories, toggleMenu } = this.props;
+    const { isMenuOpen, categories = [], toggleMenu } = this.props;
 
     const handleCategoryClick = () => {
       this.props.toggleMenu();
@@ -41,7 +41,7 @@ class NavigationMenu extends React.PureComponent {
             <h3 className='menu-title text-uppercase'>Shop By Category</h3>
             <nav role='navigation'>
               <ul className='menu-list'>
-                {categories.map((link, index) => (
+                {Array.isArray(categories) && categories.map((link, index) => (
                   <li key={index} className='menu-item'>
                     <NavLink
                       onClick={handleCategoryClick}
